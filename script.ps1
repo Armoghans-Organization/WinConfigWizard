@@ -56,7 +56,41 @@ function Write-Banner {
     Write-Host
 }
 
+function Install-Chocolatey {
+    # Check if Chocolatey is installed
+    $chocoInstalled = Get-Command choco -ErrorAction SilentlyContinue
 
+    if ($chocoInstalled -eq $null) {
+        # Chocolatey is not installed; download and install
+        Write-Host -ForegroundColor Yellow "Chocolatey is not installed. Installing Chocolatey..."
+
+        # Define the temporary folder path
+        $tempFolder = [System.IO.Path]::GetTempPath()
+        $installerPath = Join-Path -Path $tempFolder -ChildPath "ChocolateyInstall.ps1"
+
+        # Download Chocolatey installer to the temporary folder
+        Invoke-WebRequest -Uri "https://chocolatey.org/install.ps1" -OutFile $installerPath
+
+        # Install Chocolatey
+        Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-Expression "& '$installerPath'"
+
+        # Check if Chocolatey installation was successful
+        $chocoInstalled = Get-Command choco -ErrorAction SilentlyContinue
+        if ($chocoInstalled -eq $null) {
+            Write-Host -ForegroundColor Red "Failed to install Chocolatey."
+        }
+        else {
+            Write-Host -ForegroundColor Green "Chocolatey has been successfully installed."
+        }
+
+        # Remove the installer file after installation
+        Remove-Item $installerPath -ErrorAction SilentlyContinue
+    }
+    else {
+        # Chocolatey is already installed
+        Write-Host -ForegroundColor Green "Chocolatey is already installed."
+    }
+}
 
 
 
@@ -69,3 +103,8 @@ Clear-Host
 Write-Banner
 # Pause for 2 seconds
 Start-Sleep -Seconds 2
+# Call the function to check and install Chocolatey if necessary
+Install-Chocolatey
+# Add a line break for readability
+Write-Host
+
