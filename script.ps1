@@ -42,17 +42,17 @@ function Write-Banner {
 
 "@
     $BannerInfo = @"
-            Welcome WinConfigWizard - My Windows Setup Script.
-            Author: Armoghan-ul-Mohmin                                  
-            Version: 1.0.0                                              
-            Url: https://github.com/Armoghans-Organization/WinConfigWizard   
+                            Welcome WinConfigWizard - My Windows Setup Script.
+                            Author: Armoghan-ul-Mohmin                                  
+                            Version: 1.0.0                                              
+                            Url: https://github.com/Armoghans-Organization/WinConfigWizard   
 "@
 
     # Print the colored ASCII art banner to the console
     Write-Host $hardcodedBanner -ForegroundColor Red
-    Write-Host "      ------------------------------------------------------------------------"
+    Write-Host "                    -----------------------------------------------------------------------------"
     Write-Host $BannerInfo -ForegroundColor Blue
-    Write-Host "      ------------------------------------------------------------------------"
+    Write-Host "                    -----------------------------------------------------------------------------"
     Write-Host
 }
 
@@ -92,6 +92,47 @@ function Install-Chocolatey {
     }
 }
 
+function Install-Winget {
+    if (Test-Path ~\AppData\Local\Microsoft\WindowsApps\winget.exe) {
+        #Checks if winget executable exists and if the Windows Version is 1809 or higher
+        Write-Host "Winget is Already Installed." -ForegroundColor Green
+    }
+    else {
+        #Gets the computer's information
+        $ComputerInfo = Get-ComputerInfo
+
+        #Gets the Windows Edition
+        $OSName = if ($ComputerInfo.OSName) {
+            $ComputerInfo.OSName
+        }
+        else {
+            $ComputerInfo.WindowsProductName
+        }
+
+        if (((($OSName.IndexOf("LTSC")) -ne -1) -or ($OSName.IndexOf("Server") -ne -1)) -and (($ComputerInfo.WindowsVersion) -ge "1809")) {
+                
+            Write-Host "Running Alternative Installer for LTSC/Server Editions" -ForegroundColor Yellow
+
+            # Switching to winget-install from PSGallery from asheroto
+            # Source: https://github.com/asheroto/winget-in...
+                
+            Start-Process powershell.exe -Verb RunAs -ArgumentList "-command irm https://raw.githubusercontent.com/ChrisTitusTech/winutil/$BranchToUse/winget.ps1 | iex | Out-Host" -WindowStyle Normal
+                
+        }
+        elseif (((Get-ComputerInfo).WindowsVersion) -lt "1809") {
+            #Checks if Windows Version is too old for winget
+            Write-Host "Winget is not supported on this version of Windows (Pre-1809)" -ForegroundColor Red
+        }
+        else {
+            #Installing Winget from the Microsoft Store
+            Write-Host "Winget is not installed. Installing Chocolatey" -ForegroundColor Yellow
+            Start-Process "ms-appinstaller:?source=https://aka.ms/getwinget" 
+            $nid = (Get-Process AppInstaller).Id
+            Wait-Process -Id $nid
+            Write-Host "Winget  has been successfully installed." -ForegroundColor Green
+        }
+    }
+}
 
 
 ##########################################################################
@@ -107,4 +148,8 @@ Start-Sleep -Seconds 2
 Install-Chocolatey
 # Add a line break for readability
 Write-Host
+# Pause for 2 seconds
+Start-Sleep -Seconds 2
+# Call the function to check and install Winget if necessary
+Install-Winget
 
