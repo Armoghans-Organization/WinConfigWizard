@@ -134,6 +134,52 @@ function Install-Winget {
     }
 }
 
+function Install-WindowsTerminal {
+    # Check if Windows Terminal is installed
+    $terminalInstalled = Get-Command wt.exe -ErrorAction SilentlyContinue
+
+    if ($terminalInstalled -eq $null) {
+        Write-Host -ForegroundColor Red "Windows Terminal is not installed."
+
+        # Attempt to install Windows Terminal using Chocolatey
+        $chocoInstalled = Get-Command choco -ErrorAction SilentlyContinue
+        if ($chocoInstalled -ne $null) {
+            Write-Host -ForegroundColor Yellow "Trying to install Windows Terminal using Chocolatey..."
+            $chocoResult = choco install microsoft-windows-terminal -y
+            if ($chocoResult.ExitCode -eq 0) {
+                Write-Host -ForegroundColor Green "Windows Terminal has been successfully installed using Chocolatey."
+                return
+            }
+            else {
+                Write-Host -ForegroundColor Red "Failed to install Windows Terminal using Chocolatey."
+            }
+        }
+        else {
+            Write-Host -ForegroundColor Red "Chocolatey is not available. Trying to install Windows Terminal using Winget..."
+        }
+
+        # Attempt to install Windows Terminal using Winget
+        $wingetInstalled = Get-Command winget -ErrorAction SilentlyContinue
+        if ($wingetInstalled -ne $null) {
+            Write-Host -ForegroundColor Yellow "Trying to install Windows Terminal using Winget..."
+            $wingetResult = winget install Microsoft.WindowsTerminal -e
+            if ($wingetResult.ExitCode -eq 0) {
+                Write-Host -ForegroundColor Green  "Windows Terminal has been successfully installed using Winget."
+                return
+            }
+            else {
+                Write-Host -ForegroundColor Red "Failed to install Windows Terminal using Winget."
+            }
+        }
+        else {
+            Write-Host -ForegroundColor Red "Winget is not available. Cannot install Windows Terminal."
+        }
+    }
+    else {
+        Write-Host -ForegroundColor Green "Windows Terminal is already installed."
+    }
+}
+
 
 ##########################################################################
 # Main script logic
@@ -152,4 +198,14 @@ Write-Host
 Start-Sleep -Seconds 2
 # Call the function to check and install Winget if necessary
 Install-Winget
+# Add a line break for readability
+Write-Host
+# Pause for 2 seconds
+Start-Sleep -Seconds 2
+# Call the function to check and install Windows Terminal
+Install-WindowsTerminal
+# Add a line break for readability
+Write-Host
+# Pause for 2 seconds
+Start-Sleep -Seconds 2
 
