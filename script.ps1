@@ -60,7 +60,7 @@ function Install-Chocolatey {
     # Check if Chocolatey is installed
     $chocoInstalled = Get-Command choco -ErrorAction SilentlyContinue
 
-    if ($chocoInstalled -eq $null) {
+    if ($chocoInstalled.ExitCode -eq 0) {
         # Chocolatey is not installed; download and install
         Write-Host -ForegroundColor Yellow "Chocolatey is not installed. Installing Chocolatey..."
 
@@ -76,7 +76,7 @@ function Install-Chocolatey {
 
         # Check if Chocolatey installation was successful
         $chocoInstalled = Get-Command choco -ErrorAction SilentlyContinue
-        if ($chocoInstalled -eq $null) {
+        if ($chocoInstalled.ExitCode -eq 0) {
             Write-Host -ForegroundColor Red "Failed to install Chocolatey."
         }
         else {
@@ -135,36 +135,27 @@ function Install-Winget {
 }
 
 function Install-WindowsTerminal {
-    # Check if Windows Terminal is installed
+
+    # Check if Windows Terminal is already installed
     $terminalInstalled = Get-Command wt.exe -ErrorAction SilentlyContinue
 
-    if ($terminalInstalled -eq $null) {
-        Write-Host -ForegroundColor Red "Windows Terminal is not installed."
-
-        # Attempt to install Windows Terminal using Chocolatey
-        $chocoInstalled = Get-Command choco -ErrorAction SilentlyContinue
-        if ($chocoInstalled -ne $null) {
-            Write-Host -ForegroundColor Yellow "Trying to install Windows Terminal using Chocolatey..."
-            $chocoResult = choco install microsoft-windows-terminal -y
-            if ($chocoResult.ExitCode -eq 0) {
-                Write-Host -ForegroundColor Green "Windows Terminal has been successfully installed using Chocolatey."
-                return
-            }
-            else {
-                Write-Host -ForegroundColor Red "Failed to install Windows Terminal using Chocolatey."
-            }
+    if ($terminalInstalled.ExitCode -eq 0) {
+        $chocoResult = choco install microsoft-windows-terminal --force -y
+        if ($chocoResult.ExitCode -eq 0) {
+            Write-Host -ForegroundColor Green "Windows Terminal has been successfully installed using Chocolatey."
+            return
         }
         else {
-            Write-Host -ForegroundColor Red "Chocolatey is not available. Trying to install Windows Terminal using Winget..."
+            Write-Host -ForegroundColor Red "Failed to install Windows Terminal using Chocolatey. Attempting to install using Winget..."
         }
 
         # Attempt to install Windows Terminal using Winget
         $wingetInstalled = Get-Command winget -ErrorAction SilentlyContinue
         if ($wingetInstalled -ne $null) {
-            Write-Host -ForegroundColor Yellow "Trying to install Windows Terminal using Winget..."
+            Write-Host -ForegroundColor Yellow "Installing Windows Terminal using Winget..."
             $wingetResult = winget install Microsoft.WindowsTerminal -e
             if ($wingetResult.ExitCode -eq 0) {
-                Write-Host -ForegroundColor Green  "Windows Terminal has been successfully installed using Winget."
+                Write-Host -ForegroundColor Green "Windows Terminal has been successfully installed using Winget."
                 return
             }
             else {
@@ -179,6 +170,11 @@ function Install-WindowsTerminal {
         Write-Host -ForegroundColor Green "Windows Terminal is already installed."
     }
 }
+
+
+
+
+
 
 
 ##########################################################################
@@ -208,4 +204,3 @@ Install-WindowsTerminal
 Write-Host
 # Pause for 2 seconds
 Start-Sleep -Seconds 2
-
